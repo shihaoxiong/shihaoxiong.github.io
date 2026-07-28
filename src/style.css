@@ -49,7 +49,7 @@ main { max-width: 1240px; margin: auto; padding: 0 38px; }
 .hero-copy { position: relative; z-index: 1; }
 .eyebrow, .article-meta { color: var(--muted); font: 10px var(--mono); letter-spacing: 1.2px; }
 .hero .eyebrow { color: rgba(255, 248, 234, .72); }
-.hero h1 { margin: 24px 0; color: #fff8ea; font: 500 clamp(54px, 7.1vw, 104px)/.94 var(--serif); letter-spacing: -4px; text-shadow: 0 2px 24px rgba(0, 0, 0, .14); }
+.hero h1 { margin: 24px 0; color: #fff8ea; font: 500 clamp(43px, 5.3vw, 76px)/1 var(--serif); letter-spacing: -3px; white-space: nowrap; text-shadow: 0 2px 24px rgba(0, 0, 0, .14); }
 .hero h1 em { color: #ff9a5e; font-weight: 400; }
 .intro { color: var(--muted); font-size: 16px; line-height: 2; }
 .hero .intro { color: rgba(255, 248, 234, .85); }
@@ -59,10 +59,11 @@ main { max-width: 1240px; margin: auto; padding: 0 38px; }
 :root[data-theme="dark"] .hero { background-image: linear-gradient(90deg, rgba(12, 18, 30, .96) 0%, rgba(18, 26, 41, .82) 38%, rgba(58, 67, 88, .34) 70%, rgba(104, 113, 131, .16) 100%), url("/images/shihao-sunset.png"); }
 :root[data-theme="dark"] .hero h1 em { color: #d8e0ea; }
 
-.featured { border-top: 1px solid var(--line); padding: 24px 0 92px; }
-.featured-label { font: 10px var(--mono); letter-spacing: 1px; display: flex; align-items: center; gap: 9px; }
+.featured { border-top: 1px solid var(--line); padding: 36px 3.5% 98px; position: relative; background: repeating-linear-gradient(0deg, transparent 0 29px, color-mix(in srgb, var(--line) 32%, transparent) 30px); }
+.featured-label { width: fit-content; padding: 8px 13px; border: 1px dashed var(--line); background: var(--paper); font: 10px var(--mono); letter-spacing: 1px; display: flex; align-items: center; gap: 9px; transform: rotate(-.5deg); }
 .featured-label span { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-.featured-card { margin-top: 20px; background: var(--card); padding: 68px 11%; position: relative; overflow: hidden; }
+.featured-card { margin-top: 22px; background: linear-gradient(135deg, color-mix(in srgb, var(--card) 93%, white) 0%, var(--card) 100%); border: 1px solid color-mix(in srgb, var(--line) 80%, var(--accent)); box-shadow: 8px 9px 0 color-mix(in srgb, var(--accent) 19%, transparent), inset 0 0 0 7px color-mix(in srgb, var(--paper) 31%, transparent); padding: 70px 11%; position: relative; overflow: hidden; transform: rotate(-.18deg); }
+.featured-card::before { content: "SHIHAO NOTES  ·  AIR MAIL"; position: absolute; top: 22px; right: 27px; border: 1px dashed color-mix(in srgb, var(--accent) 62%, var(--line)); color: color-mix(in srgb, var(--accent) 78%, var(--muted)); padding: 6px 8px; font: 8px var(--mono); letter-spacing: .9px; transform: rotate(2deg); }
 .featured-card h2 { font: 500 clamp(32px, 4.3vw, 64px)/1.05 var(--serif); max-width: 850px; letter-spacing: -2.4px; margin: 18px 0; }
 .featured-card p { font-size: 16px; color: var(--muted); line-height: 1.9; max-width: 600px; }
 .read-button { margin-top: 25px; background: var(--ink); color: var(--paper); border: 0; padding: 14px 18px; font: 11px var(--mono); }
@@ -77,7 +78,9 @@ main { max-width: 1240px; margin: auto; padding: 0 38px; }
 .filters { display: flex; gap: 7px; margin: 50px 0 12px; flex-wrap: wrap; }
 .filters button { border: 1px solid var(--line); color: var(--muted); background: transparent; padding: 7px 12px; font: 11px var(--mono); }
 .filters .active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.post { display: grid; grid-template-columns: 64px 1fr 44px; gap: 20px; padding: 29px 0; border-top: 1px solid var(--line); align-items: center; }
+.post { display: grid; grid-template-columns: 64px 1fr 44px; gap: 20px; padding: 36px 40px 32px; margin-top: 16px; border: 1px solid var(--line); background: linear-gradient(106deg, color-mix(in srgb, var(--paper) 93%, white), var(--card)); box-shadow: 5px 6px 0 color-mix(in srgb, var(--accent) 14%, transparent); position: relative; align-items: center; transform: rotate(.12deg); }
+.post::before { content: "FIELD NOTE"; position: absolute; top: 13px; right: 24px; color: color-mix(in srgb, var(--accent) 70%, var(--muted)); font: 8px var(--mono); letter-spacing: .8px; }
+.post:nth-child(even) { transform: rotate(-.12deg); }
 .post-number { font: 11px var(--mono); color: var(--accent); }
 .post h3 { margin: 11px 0 8px; font: 500 28px/1.25 var(--serif); letter-spacing: -.8px; }
 .post p { margin: 0; max-width: 670px; color: var(--muted); font-size: 14px; line-height: 1.7; }
@@ -87,6 +90,8 @@ main { max-width: 1240px; margin: auto; padding: 0 38px; }
 .empty { color: var(--muted); padding: 40px 0; }
 
 .about { border-top: 1px solid var(--line); padding: 90px 8%; display: grid; grid-template-columns: 1.1fr .9fr; gap: 75px; }
+.about .eyebrow { font-size: 8px; letter-spacing: 1.6px; }
+.about h2 { font-size: clamp(30px, 3.7vw, 52px); letter-spacing: -2px; white-space: nowrap; }
 .about-copy { padding-top: 36px; color: var(--muted); line-height: 2; font-size: 16px; }
 .about-copy .text-link { color: var(--ink); }
 footer { border-top: 1px solid var(--line); min-height: 82px; display: flex; gap: 24px; align-items: center; justify-content: space-between; color: var(--muted); font: 10px var(--mono); letter-spacing: .3px; }
@@ -115,18 +120,22 @@ footer { border-top: 1px solid var(--line); min-height: 82px; display: flex; gap
   .nav { height: 70px; }
   .nav-links { gap: 16px; }
   .hero { padding: 84px 8%; min-height: 510px; background-position: 58% center; }
-  .hero h1 { letter-spacing: -2.5px; }
-  .featured-card { padding: 48px 28px; }
+  .hero h1 { font-size: clamp(37px, 10vw, 53px); letter-spacing: -2px; white-space: normal; }
+  .featured { padding: 30px 0 78px; }
+  .featured-card { padding: 56px 28px 48px; box-shadow: 5px 6px 0 color-mix(in srgb, var(--accent) 19%, transparent); }
+  .featured-card::before { top: 18px; right: 18px; font-size: 7px; }
   .featured-card h2 { letter-spacing: -1.4px; }
   .orbit { opacity: .55; }
   .section-head { align-items: flex-start; gap: 25px; flex-direction: column; }
   .search { width: 100%; }
   .search input { width: 100%; }
-  .post { grid-template-columns: 30px 1fr; }
+  .post { grid-template-columns: 30px 1fr; padding: 32px 21px 25px; }
+  .post::before { right: 17px; }
   .post .round-link { display: none; }
   .post-status { grid-column: 2; text-align: left; }
   .post h3 { font-size: 23px; }
   .about { grid-template-columns: 1fr; padding: 68px 4%; gap: 25px; }
+  .about h2 { font-size: clamp(29px, 8vw, 42px); letter-spacing: -1.7px; white-space: normal; }
   .about-copy { padding: 0; }
   footer { padding: 22px 0; align-items: flex-start; flex-direction: column; gap: 10px; }
   .article-page { padding: 52px 4% 90px; }
