@@ -1,4 +1,4 @@
-# Xiaodan Notes
+# Shihao Notes
 
 一个无需后端的个人博客，使用 React + Vite 构建，适合部署在 GitHub Pages。
 
