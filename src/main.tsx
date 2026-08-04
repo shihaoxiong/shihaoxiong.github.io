@@ -54,36 +54,70 @@ const article = {
 } satisfies { subtitle: Localized; intro: Localized; sections: { heading: Localized; body: Record<Language, string[]>; bullets?: Record<Language, string[]>; figure?: { src: string; caption: Localized } }[]; closing: Localized };
 
 function App() {
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
   const [lang, setLang] = useState<Language>("zh");
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState("全部");
-  const [selectedArticle, setSelectedArticle] = useState(false);
+  const [page, setPage] = useState<"home" | "article" | "about">("home");
+  const [progress, setProgress] = useState(0);
   const t = copy[lang];
 
-  useEffect(() => { const savedTheme = window.localStorage.getItem("shihao-theme"); setDark(savedTheme !== "light"); const savedLang = window.localStorage.getItem("shihao-language"); if (savedLang === "en" || savedLang === "zh") setLang(savedLang); }, []);
+  useEffect(() => { const savedTheme = window.localStorage.getItem("shihao-theme"); setDark(savedTheme === "dark"); const savedLang = window.localStorage.getItem("shihao-language"); if (savedLang === "en" || savedLang === "zh") setLang(savedLang); }, []);
   useEffect(() => { document.documentElement.dataset.theme = dark ? "dark" : "light"; window.localStorage.setItem("shihao-theme", dark ? "dark" : "light"); }, [dark]);
   useEffect(() => { window.localStorage.setItem("shihao-language", lang); }, [lang]);
+  useEffect(() => {
+    if (page !== "article") return;
+    const updateProgress = () => {
+      const available = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(available > 0 ? Math.min(100, (window.scrollY / available) * 100) : 0);
+    };
+    updateProgress();
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    return () => window.removeEventListener("scroll", updateProgress);
+  }, [page]);
 
   const tags = [t.all, ...Array.from(new Set(posts.map((post) => post.tag[lang])))];
   const filtered = useMemo(() => posts.filter((post) => (activeTag === t.all || post.tag[lang] === activeTag) && `${post.title[lang]}${post.excerpt[lang]}`.toLowerCase().includes(query.toLowerCase())), [activeTag, lang, query, t.all]);
   const featured = posts.find((post) => post.featured)!;
-  const openArticle = () => { setSelectedArticle(true); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  const closeArticle = () => { setSelectedArticle(false); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const showPage = (next: "home" | "article" | "about") => { setPage(next); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const changeLanguage = () => { setLang(lang === "zh" ? "en" : "zh"); setActiveTag(lang === "zh" ? "All" : "全部"); };
+  const navToWriting = () => {
+    if (page !== "home") {
+      setPage("home");
+      window.setTimeout(() => document.querySelector("#writing")?.scrollIntoView({ behavior: "smooth" }), 0);
+    }
+  };
 
-  if (selectedArticle) return <main className="article-shell">
-    <nav className="nav" aria-label="Main navigation"><a className="brand" href="#top" onClick={closeArticle}>SHIHAO<span>•</span>NOTES</a><div className="nav-links"><button className="language-toggle" onClick={() => setLang(lang === "zh" ? "en" : "zh")}>{lang === "zh" ? "EN" : "中文"}</button><button className="theme-toggle" onClick={() => setDark((value) => !value)} aria-label="Toggle theme">{dark ? "☀" : "◐"}</button></div></nav>
-    <article className="article-page" id="top"><button className="back-link" onClick={closeArticle}>← {t.back}</button><p className="eyebrow">{featured.date} · {featured.tag[lang].toUpperCase()} · {featured.minutes}</p><h1>{featured.title[lang]}</h1><p className="article-subtitle">{article.subtitle[lang]}</p><div className="article-body"><p className="lead">{article.intro[lang]}</p>{article.sections.map((section) => <section key={section.heading.zh}><h2>{section.heading[lang]}</h2>{section.body[lang].map((paragraph) => <p className="article-paragraph" key={paragraph}>{paragraph}</p>)}{section.bullets && <ul className="article-list">{section.bullets[lang].map((item) => <li key={item}>{item}</li>)}</ul>}{section.figure && <figure className="article-figure"><img src={section.figure.src} alt={section.figure.caption[lang]} /><figcaption>{section.figure.caption[lang]}</figcaption></figure>}</section>)}<p className="closing">{article.closing[lang]}</p></div><a className="text-link" href="mailto:xiongshihao97@gmail.com">{t.contact} <span>↗</span></a></article>
+  const Header = () => <header className="wrap"><nav className="nav site-nav" aria-label="Main navigation">
+    <button className="nav-brand" onClick={() => showPage("home")}>Shihao Xiong</button>
+    <button className={page === "home" ? "nav-link active" : "nav-link"} onClick={navToWriting}>{t.articles}</button>
+    <button className={page === "about" ? "nav-link active" : "nav-link"} onClick={() => showPage("about")}>{t.about}</button>
+    <button className="nav-link language" onClick={changeLanguage}>{lang === "zh" ? "EN" : "中文"}</button>
+    <button className="btn btn-secondary theme-btn" onClick={() => setDark((value) => !value)} aria-label="Toggle color theme">{dark ? "☾ 夜" : "☀ 日"}</button>
+  </nav></header>;
+
+  const Timeline = () => <section className="timeline stack" aria-label="Timeline">
+    <h6 className="section-label">{lang === "zh" ? "正在思考 / Now" : "Currently thinking"}</h6>
+    <div className="tl-row"><div className="tl-rail"><i /><u /></div><div className="card tl-card"><small>NOW</small><h4>{lang === "zh" ? "Agent Infra 与企业运行边界" : "Agent infrastructure and enterprise boundaries"}</h4><p>{lang === "zh" ? "持续记录 Agent 如何安全、稳定、可治理地完成真实工作。" : "Notes on helping agents complete real work safely, reliably, and governably."}</p></div></div>
+    <div className="tl-row"><div className="tl-rail"><i className="olive" /><u /></div><div className="card tl-card"><small>WRITING</small><h4>{lang === "zh" ? "把尚未成形的思考写清楚" : "Making half-formed thoughts clear"}</h4><p>{lang === "zh" ? "技术笔记与工作方法，慢慢整理，持续更新。" : "Technical notes and ways of working, gathered gradually."}</p></div></div>
+  </section>;
+
+  const Footer = () => <footer className="wrap site-footer"><span>© 2026 Shihao Xiong</span><span>{lang === "zh" ? "慢慢写，也认真写。" : "Written slowly, with care."}</span><button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>{t.top}</button></footer>;
+
+  const Home = () => <main className="wrap stack home-page">
+    <section className="hero" id="top"><div className="hero-copy"><h6>SHIHAO XIONG · FIELD NOTES</h6><h1>{lang === "zh" ? "构建 Agent 基础设施，也把过程写下来。" : "Building agent infrastructure, and writing it down."}</h1><p>{lang === "zh" ? "关于企业 Agent、工程实践与慢慢形成的想法。这里记录问题如何被拆开、验证，最后变成可靠的系统。" : "Notes on enterprise agents, engineering practice, and ideas taking shape—how problems are unpacked, tested, and turned into reliable systems."}</p><div className="hero-actions"><a className="btn btn-primary" href="#writing">{lang === "zh" ? "阅读文章" : "Read notes"}</a><button className="btn btn-secondary" onClick={() => showPage("about")}>{t.about}</button></div></div><div className="portrait-ring"><img className="portrait washed" src="/images/shihao-sunset.png" alt={lang === "zh" ? "日落海面" : "Sunset over the sea"} /></div></section>
+    <section className="now-bar" aria-label="Now"><h6>{lang === "zh" ? "现在" : "Now"}</h6><div className="now-item"><span className="dot" /><div><b>{lang === "zh" ? "整理 Agent Infra 的实践" : "Mapping agent infrastructure"}</b><span>{lang === "zh" ? "写作 · 进行中" : "Writing · in progress"}</span></div></div><div className="now-item"><span className="dot dot-2" /><div><b>{lang === "zh" ? "阅读与构建" : "Reading and building"}</b><span>{lang === "zh" ? "工程 · 持续进行" : "Engineering · ongoing"}</span></div></div><div className="now-item"><span className="dot dot-idle" /><div><b>{lang === "zh" ? "更新这个小站" : "Tending this small site"}</b><span>{lang === "zh" ? "博客 · 缓慢更新" : "Blog · slowly updated"}</span></div></div></section>
+    <article className="card elev-sm featured"><span className="card-kicker">{lang === "zh" ? "最新一篇" : "Latest note"} · {featured.date} · {featured.minutes}</span><h2>{featured.title[lang]}</h2><p>{featured.excerpt[lang]}</p><button className="btn btn-primary" onClick={() => showPage("article")}>{lang === "zh" ? "继续读 →" : "Continue reading →"}</button></article>
+    <section className="cols" id="writing"><div className="col"><div className="row-between"><h6>{lang === "zh" ? "技术笔记" : "Technical notes"}</h6><span className="quiet-count">{posts.length} {lang === "zh" ? "篇" : "note"}</span></div><label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.search} aria-label={t.search} /></label><div className="filters" aria-label="Article tags">{tags.map((tag) => <button className={activeTag === tag ? "active" : ""} key={tag} onClick={() => setActiveTag(tag)}>{tag}</button>)}</div><div className="note-list">{filtered.map((post) => <button className="note" key={post.id} onClick={() => showPage("article")}><span className="dot" /><span><h4>{post.title[lang]}</h4><small>{post.date} · {post.minutes}</small></span></button>)}{filtered.length === 0 && <p className="empty">{t.noResults}</p>}</div></div><div className="col"><div className="row-between"><h6 className="olive-label">{lang === "zh" ? "写作方向" : "Writing directions"}</h6></div><div className="card career-card"><h4>{lang === "zh" ? "让系统在企业里长期工作" : "Making systems work over time"}</h4><small>{lang === "zh" ? "Agent Infra · 安全与治理" : "Agent infra · safety and governance"}</small></div><div className="card career-card"><h4>{lang === "zh" ? "把复杂的工程问题说明白" : "Explaining complex engineering"}</h4><small>{lang === "zh" ? "工作方法 · 技术笔记" : "Ways of working · technical notes"}</small></div><div className="card career-card"><h4>{lang === "zh" ? "持续学习，持续校正" : "Learn, then recalibrate"}</h4><small>{lang === "zh" ? "阅读 · 观察 · 实践" : "Reading · observation · practice"}</small></div></div></section>
+    <Timeline />
+    <section className="band"><div><h4>{lang === "zh" ? "想聊聊，或者订阅更新" : "Say hello or follow along"}</h4><p>{lang === "zh" ? "有想法、问题或一起在做的事，欢迎来信。" : "Ideas, questions, or work in progress are always welcome."}</p></div><div className="band-actions"><a className="btn btn-primary" href="mailto:xiongshihao97@gmail.com">Email</a><button className="btn btn-secondary" onClick={() => showPage("about")}>{t.about}</button></div></section>
   </main>;
 
-  return <main>
-    <nav className="nav" aria-label="Main navigation"><a className="brand" href="#top" aria-label="Home">SHIHAO<span>•</span>NOTES</a><div className="nav-links"><a href="#writing">{t.articles}</a><a href="#about">{t.about}</a><button className="language-toggle" onClick={() => { setLang(lang === "zh" ? "en" : "zh"); setActiveTag(lang === "zh" ? "All" : "全部"); }}>{lang === "zh" ? "EN" : "中文"}</button><button className="theme-toggle" onClick={() => setDark((value) => !value)} aria-label="Toggle theme">{dark ? "☀" : "◐"}</button></div></nav>
-    <section className="hero" id="top"><div className="hero-copy"><p className="eyebrow">FIELD NOTES / 2026</p><h1>{lang === "zh" ? <>构建、思考， <em>慢慢成为。</em></> : <>Build, reflect, <em>becoming slowly.</em></>}</h1><a className="text-link" href="#writing">{lang === "zh" ? "开始阅读" : "Start reading"} <span>↓</span></a></div></section>
-    <section className="featured" aria-label="Featured essay"><div className="featured-label"><span></span> {lang === "zh" ? "LATEST ESSAY" : "LATEST ESSAY"}</div><article className="featured-card"><div className="article-meta">{featured.date} · {featured.tag[lang].toUpperCase()} · {featured.minutes}</div><h2>{featured.title[lang]}</h2><p>{featured.excerpt[lang]}</p><button className="read-button" onClick={openArticle}>{t.read} <b>↗</b></button><div className="orbit" aria-hidden="true">01</div></article></section>
-    <section className="writing" id="writing"><div className="section-head"><div><p className="eyebrow">{lang === "zh" ? "SELECTED WRITING" : "SELECTED WRITING"}</p><h2>{t.latest}</h2></div><label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.search} aria-label={t.search} /></label></div><div className="filters" aria-label="Article tags">{tags.map((tag) => <button className={activeTag === tag ? "active" : ""} key={tag} onClick={() => setActiveTag(tag)}>{tag}</button>)}</div><div className="post-list">{filtered.map((post, index) => <article className="post" key={post.id}><span className="post-number">0{index + 1}</span><div><div className="article-meta">{post.date} · {post.tag[lang].toUpperCase()} · {post.minutes}</div><h3>{post.title[lang]}</h3><p>{post.excerpt[lang]}</p></div>{post.published ? <button className="round-link" onClick={openArticle} aria-label={t.read}>↗</button> : <span className="post-status">{t.comingSoon}</span>}</article>)}{filtered.length === 0 && <p className="empty">{t.noResults}</p>}</div></section>
-    <section className="about" id="about"><div><p className="eyebrow">ABOUT ME</p><h2>{lang === "zh" ? <>在复杂世界里，寻找清晰的路径。</> : <>Finding a clearer path through a complex world.</>}</h2></div><div className="about-copy"><p>{t.aboutLead}</p><p>{t.aboutBody}</p><a className="text-link" href="mailto:xiongshihao97@gmail.com">{t.contact} <span>↗</span></a></div></section>
-    <footer><span>© 2026 SHIHAO NOTES</span><span>MADE WITH CARE &amp; CURIOSITY</span><a href="#top">{t.top}</a></footer>
-  </main>;
+  const About = () => <main className="wrap"><div className="about-page"><aside className="about-side"><img className="portrait-lg washed" src="/images/shihao-sunset.png" alt={lang === "zh" ? "日落海面" : "Sunset over the sea"} /><a className="btn btn-secondary btn-block" href="mailto:xiongshihao97@gmail.com">Email <span>↗</span></a><button className="btn btn-secondary btn-block" onClick={() => showPage("home")}>{t.articles} <span>→</span></button></aside><div className="about-body"><section><h6>{lang === "zh" ? "关于 / About" : "About"}</h6><h1>{lang === "zh" ? "你好，我是 Shihao。" : "Hi, I’m Shihao."}</h1><p>{t.aboutLead}</p><p>{t.aboutBody}</p></section><Timeline /><section><h6 className="section-label">{lang === "zh" ? "关注" : "Focus"}</h6><div className="tag-row"><span className="tag tag-outline">Agent Infra</span><span className="tag tag-outline">Systems</span><span className="tag tag-outline">AgentOps</span><span className="tag tag-outline">Writing</span><span className="tag tag-outline">AI</span></div></section><section className="cta"><h4>{lang === "zh" ? "聊聊？" : "Let’s talk."}</h4><p>{lang === "zh" ? "关于基础设施、团队，或者一个尚未想清楚的工程问题，都欢迎写信。" : "Infrastructure, teams, or an engineering problem that is not clear yet—all welcome."}</p><a className="btn btn-primary" href="mailto:xiongshihao97@gmail.com">{lang === "zh" ? "写信给我" : "Email me"}</a></section></div></div></main>;
+
+  const Article = () => <><div className="progress-track"><div className="progress-bar" style={{ width: `${progress}%` }} /></div><main className="wrap"><div className="article"><aside className="aside"><button className="btn btn-secondary back-button" onClick={() => showPage("home")}>← {t.back}</button><nav className="card toc" aria-label="Table of contents"><span className="card-kicker">{lang === "zh" ? "目录" : "Contents"}</span>{article.sections.map((section, index) => <a href={`#section-${index + 1}`} key={section.heading.zh}><i>{String(index + 1).padStart(2, "0")}</i><span>{section.heading[lang]}</span></a>)}</nav><div className="card author-card"><div className="author-head"><img className="washed" src="/images/shihao-sunset.png" alt="" /><div><b>Shihao Xiong</b><span>Agent Infrastructure</span></div></div><small>{featured.date} · {featured.minutes}</small></div></aside><article className="prose"><span className="tag tag-accent">{featured.tag[lang]}</span><h1>{featured.title[lang]}</h1><p className="dek">{article.subtitle[lang]}</p><p className="lead">{article.intro[lang]}</p>{article.sections.map((section, index) => <section id={`section-${index + 1}`} key={section.heading.zh}><div className="h-num"><i>{String(index + 1).padStart(2, "0")}</i><h3>{section.heading[lang].replace(/^\d+\.\s*/, "")}</h3></div>{section.body[lang].map((paragraph) => <p key={paragraph}>{paragraph}</p>)}{section.bullets && <ul>{section.bullets[lang].map((item) => <li key={item}>{item}</li>)}</ul>}{section.figure && <figure><img src={section.figure.src} alt={section.figure.caption[lang]} /><figcaption>{section.figure.caption[lang]}</figcaption></figure>}</section>)}<p className="closing">{article.closing[lang]}</p><div className="tag-row"><span className="tag tag-outline">agent-infra</span><span className="tag tag-outline">systems</span><span className="tag tag-outline">governance</span></div></article></div></main></>;
+
+  return <div className="site-shell"><Header />{page === "home" ? <Home /> : page === "about" ? <About /> : <Article />}<Footer /></div>;
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
